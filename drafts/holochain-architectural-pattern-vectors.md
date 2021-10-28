@@ -1,0 +1,271 @@
+[back to Blogs](../index.md)
+
+
+October 22, 2021
+
+### Discovering the flexibility of the Holochain Architecture
+# 4 Pattern Vectors
+
+
+The goal of this article is to map the thought process that led to the [4 Pattern
+Vectors](https://github.com/mjbrisebois/hc-4-pattern-vectors).
+
+1. Chronology - *the action hierarchy*
+2. Provenance - *the lifecycle identifier*
+3. Navigation - *the linking model*
+4. Congruence - *the conflict resolution type*
+
+
+
+## Prerequisites
+
+Before reading this article, it is important to understand some of the fundamentals of Holochain,
+including:
+
+- The chain vs the DHT
+  - see [Holochain Core Concepts](https://developer.holochain.org/concepts/)
+- Basic HDK methods and their purpose
+  - specifically: `create_entry`, `update_entry`, `get_details`, `delete_entry` `create_link`,
+    `get_links`
+  - see [docs.rs/hdk](https://docs.rs/hdk)
+
+
+
+## Where to start thinking?
+
+Most, if not all, app development will begin with these questions
+
+- [How do users create content?](#how-do-i-create-content)
+- [How do users get back to that content later?](#how-do-i-get-back-to-that-content-later)
+- [How do users update that content?](#how-do-i-update-that-content)
+- [How do users stop seeing content? (aka deleting)](#what-about-deleting-the-note)
+
+For the purposes of this article, let's say we are making a simple note taking app.  Our acceptance
+criteria will be...
+
+- a User can create a note and read, update, or delete their own notes
+
+
+I find the easiest way to start planning is to imagine the first things that a new user will do.  We
+can skip the sign-up/in parts for now (aka installing DNAs and membrane proofs) because the focus of
+this article is CRUD.
+
+To keep things simple, we will say our User wants to
+
+1. Create a Note
+2. View a list of their Notes
+3. Update a Note
+4. Delete a Note
+
+
+### The DNA's initial state
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1HkRPY9nDnYP-m8UA7OLmiz9GF-SVvJNX&sz=w1000)
+
+
+### How do I create content?
+Everything begins with content being created.  Great, that's easy enough.  We just have to define an
+entry type (`Note`) and use it with the
+[`create_entry`](https://docs.rs/hdk/0.0.*/hdk/entry/fn.create_entry.html) method.
+
+*Here is our new state*
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1LD_MaxJtp4RX_oKNkOcCZnQ2VBt89PCN&sz=w1000)
+
+
+### How do I get back to that content later?
+As we can see in the previous state visualization, the only link to the created content is from the
+create header in the agent's source chain.  This means we can discover all the created notes by
+searching through an Agent's source chain.  However, this could become quite inefficient as the
+chain continues to grow.  Another option is to create links from a predictable entry location
+(Anchor) such as a hard-coded value, or in this case, we will link from the Agent entry.
+
+*State visualization after calling
+[`create_link`](https://docs.rs/hdk/0.0.*/hdk/link/fn.create_link.html) with the Agent entry as the
+base*
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1RWJ83tzqFOZxLUMvNNNpsQZSND3LwbJN&sz=w1000)
+
+Now we can discover all the `Note` entries created by an Agent just by know the Agent ID.
+
+
+### How do I update that content?
+Updates are based off a previous header that has entry data (meaning a previous create or update
+header).  At this point our only option is to base the update off of the Note's create header.
+
+*State visualization after calling
+[`update_entry`](https://docs.rs/hdk/0.0.*/hdk/entry/fn.update_entry.html) with the create header
+hash and new entry content*
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1fXfZsHd0B6BO-y9D4TyHd-linPry7hKE&sz=w1000)
+
+Again, we can only follow the relationship between the Create's Note entry and the Update's Note
+entry via the Agent's source chain.  To list the most recent updates of an Agent's notes, the
+process would be...
+
+1. [`get_links`](https://docs.rs/hdk/0.0.*/hdk/link/fn.get_links.html) from the Agent entry base to
+   get a list of created Note entries.
+2. then, [`get_details`](https://docs.rs/hdk/0.0.*/hdk/entry/fn.get_details.html) for each Note
+   entry to see if there are update(s).
+3. If there are update(s), we need an additional call to get the Update's Note entry.
+
+
+#### Identifying Congruence and Chronology
+
+Now we have made a few assumptions here already.
+
+- We are assuming that each Note entry is a full-state update of the Note contents.
+   - We could design our Note entry so that only changed fields are included in the Update's Note
+     entry (which we could call operation-based updating).  This pattern choice relates to
+     [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) and we will call it
+     the **Congruence** vector which means; *agreement or harmony; compatibility*.
+- We are assuming that all updates are based-off the Create header (a flattened link model).
+   - However, if we want to preserve the precise order of intention, we could base every update off
+     of the most recent Create, or Update, header we are seeing (a chained link model).  We will
+     call it the **Chronology** vector which means; *the arrangement of events in the order of their
+     occurrence*.
+
+##### When are operation-based updates better?
+- Real-time collaborative would be a good example of where operation-based entries may be more
+  efficient.
+
+##### When is chained better than flattened?
+- The chained pattern may be necessary if an entry can be updated by more than 1 Agent.  CRDT would
+  be needed because any Agent cannot guarantee the latest information before making an Update.
+
+
+### Linking to Update Entries
+Just like before, let's use links to make the relationship clear in the DHT without needing to
+follow headers.
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1GCqIqaAQzw0HrXO-vDskrLMKFf9dIGjH&sz=w1000)
+
+> The "Create Link" header references are starting to make the diagram a little messy.  From now on
+> they will be very faded but that doesn't mean they are different than any other header references.
+
+
+### Naming the Life Cycle Concept
+So far we have referrenced "Entry", which represents an immutable piece of data; and also,
+"Element", which is the pair of an action (header) and an entry.  Neither of these words is
+sufficient for describing the concept that gives this series of entries/elements meaning.  Each one
+represents a state in the evolution of some thing; what is that thing?
+
+After some research and consideration, "Entity" seemed to represent the idea quite accurately.
+
+> **Entity** a thing with distinct and independent existence.
+
+For the rest of this article
+
+- *Entity* - will represent the conceptual object that is defined by its life cycle (elements /
+  entries).
+- *Entity ID* - will represent the entity's create hash where update links are based.
+
+
+### Another Update
+
+If we continue our congruence and chronology choices above (state-based, flattened), then a second
+update would yield this state.
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1QF_xo2BX_CUJ46Hh9M5Ngit3PZFVOJlH&sz=w1000)
+
+
+#### Identifying Provenance
+
+In the previous diagram, the header relationships and entry relationships may seem redundant.  The
+references from the Create header to the Update headers, and the Create's Note entry to the Update's
+Note entries essential represent the same thing.  Depending on where we start traversing the
+connections, this could be an unnecessary redundancy.  As a thought experiment, what if we could
+link the Agent-entry to the Create headers and remove the entry update links.
+
+*Here is our theoretical state*
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1qRgz6X7WrfdfXxWfZ-xj8vt8ttZ0qWS-&sz=w1000)
+
+We have now switched from treating the Create header, rather than the Create's entry, as the base
+for update links.  This choice changes what we treat as the "Entity ID" and we will call it the
+**Provenance** vector which means; *the place of origin or earliest known history of something*.
+
+> **NOTE:** as of this artcle (October 2021), Holochain does not support links to or from
+> header-hashes.  Since this is not an architectural limitation, the thought experiment should be
+> included in this analysis.
+
+Our theoretical steps for fetching the most recent updates of an Agent's notes are...
+
+1. [`get_links`](https://docs.rs/hdk/0.0.*/hdk/link/fn.get_links.html) from the Agent entry base to
+   get a list of created Note headers.
+2. then, [`get_details`](https://docs.rs/hdk/0.0.*/hdk/entry/fn.get_details.html) for each Note
+   header to see if there are update(s).
+3. then, get the entry for each Note
+
+This is almost as efficient as linking to entries, but what happens when we change to chained
+congruency?
+
+*Chained header references with header provenance*
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=15avOqh4_Xl1ghOEaSKOALBL1hJ9MEXmb&sz=w1000)
+
+To get the newest update for our created Note, we have to recursively check for updates until we
+arrive at a header with no updates.  This is not very efficient, but it could be fixed with some
+additional linking (which would be header to header links).
+
+However, because of linking limitations at this time, I believe it is best to stick to the natively
+supported method.  So we'll go back to using the Create entry, rather than the Create header, as our
+Provenance vector.
+
+#### Switching to chained congruency
+
+Since we already established links between all our entries, we could switch to chained congruency
+without effecting the steps to fetch an Agent's latest notes.
+
+*Chained header references with entry provenance*
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1eoJr4UHOcEAngxFOdS57GCpnvyHFWkax&sz=w1000)
+
+
+#### Identifying Navigation
+There is one more assumption we have made here regarding the link from the Agent entry to the create
+Note-entry.  Could we continue to add links to all the Note updates?
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1OVvnIc4VdigPO7As2jXDVV7xmfeOwORW&sz=w1000)
+
+This creates a new issue; how can we tell the difference between additional Note entries and updates
+for those Note entries?  Technically, it's possible to accomplish this using link tags, but the
+options seem a bit unnatural and fragile.  Instead of continually adding links for each update, we
+could replace the link (aka delete the existing one, and create a new one).
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1Klg2eRCjYqm9OpRanl8T4CzX_oXsroP7&sz=w1000)
+
+This method creates twice as many headers, but cuts the number of hops from the Agent entry in half.
+We will call it the **Navigation** vector which means *the process of ascertaining one's position
+and following a route.*
+
+The cost/benifit ratio will depend on an app's use-case scenarios.  As a general rule, replacing
+links will be more efficient if the reads will greatly outnumber the writes for an entry type.
+
+
+### What about deleting the Note?
+All we need to do is call [`delete_entry`](https://docs.rs/hdk/0.0.*/hdk/entry/fn.delete_entry.html)
+for the original Create header.  Regardless of our choice for the provenance vector, this delete
+will result in our Entity ID being marked as deleted.  Which will cause all our get methods to treat
+it as a deadend.
+
+
+## Conclusion
+We have now covered the essential use-case scenarios
+
+- Writes
+  - Create
+  - Update
+  - Delete
+- Reads
+  - Get the latest data
+  - Get the latest data for a list of subjects
+
+This journey has revealed 4 unique pattern options that are independent of each other.  Any
+combination of these vectors is a potential CRUD framework.  We also identified an inherent, yet
+obscure, concept that we can now refer to as "Entity".
+
+Related links
+
+- [TODO: link to the specification]() - The 4-pattern specification along with in-depth pattern
+  analysis
