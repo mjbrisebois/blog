@@ -198,7 +198,7 @@ Our theoretical steps for fetching the most recent updates of an Agent's notes a
 3. then, get the entry for each Note
 
 This is almost as efficient as linking to entries, but what happens when we change to chained
-congruency?
+chronology?
 
 *Chained header references with header provenance*
 
@@ -212,9 +212,9 @@ However, because of linking limitations at this time, I believe it is best to st
 supported method.  So we'll go back to using the Create entry, rather than the Create header, as our
 Provenance vector.
 
-#### Switching to chained congruency
+#### Switching to Chained Chronology
 
-Since we already established links between all our entries, we could switch to chained congruency
+Since we already established links between all our entries, we could switch to chained chronology
 without effecting the steps to fetch an Agent's latest notes.
 
 *Chained header references with entry provenance*
