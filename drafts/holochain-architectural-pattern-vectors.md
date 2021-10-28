@@ -1,9 +1,9 @@
 [back to Blogs](../index.md)
 
 
-October 22, 2021
+October 28, 2021
 
-### Discovering the flexibility of the Holochain Architecture
+### Discovering 4 choices every hApp developer will need to make
 # 4 Pattern Vectors
 
 
