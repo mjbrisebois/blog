@@ -267,5 +267,5 @@ obscure, concept that we can now refer to as "Entity".
 
 Related links
 
-- [TODO: link to the specification]() - The 4-pattern specification along with in-depth pattern
-  analysis
+- [4 Pattern Vectors](https://mjbrisebois.github.io/hc-4-pattern-vectors) - The 4 Pattern Vectors
+  Specification along with in-depth pattern analysis
