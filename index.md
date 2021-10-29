@@ -1,5 +1,5 @@
 
-# Blogs
+# Blog
 
 My name is Matthew and I am currently working for Holochain on the
 [DevHub](https://github.com/holochain/devhub-dnas) project.  The goal here is to document my journey

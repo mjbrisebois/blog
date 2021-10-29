@@ -1,4 +1,4 @@
-[Go to Blogs](index.md)
+[Go to Blog](index.md)
 
 # Drafts
 
