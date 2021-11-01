@@ -215,7 +215,7 @@ Provenance vector.
 #### Switching to Chained Chronology
 
 Since we already established links between all our entries, we could switch to chained chronology
-without effecting the steps to fetch an Agent's latest notes.
+without affecting the steps to fetch an Agent's latest notes.
 
 *Chained header references with entry provenance*
 
