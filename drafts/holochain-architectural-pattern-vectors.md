@@ -10,10 +10,10 @@ October 28, 2021
 The goal of this article is to map the thought process that led to the [4 Pattern
 Vectors](https://github.com/mjbrisebois/hc-4-pattern-vectors).
 
-1. Chronology - *the action hierarchy*
-2. Provenance - *the lifecycle identifier*
-3. Navigation - *the linking model*
-4. Congruence - *the conflict resolution type*
+1. [Chronology](#identifying-congruence-and-chronology) - *the action hierarchy*
+2. [Provenance](#identifying-provenance) - *the lifecycle identifier*
+3. [Navigation](#identifying-navigation) - *the linking model*
+4. [Congruence](#identifying-congruence-and-chronology) - *the conflict resolution type*
 
 
 
@@ -25,8 +25,12 @@ including:
 - The chain vs the DHT
   - see [Holochain Core Concepts](https://developer.holochain.org/concepts/)
 - Basic HDK methods and their purpose
-  - specifically: `create_entry`, `update_entry`, `get_details`, `delete_entry` `create_link`,
-    `get_links`
+  - specifically: [`create_entry`](https://docs.rs/hdk/0.0.*/hdk/entry/fn.create_entry.html),
+    [`update_entry`](https://docs.rs/hdk/0.0.*/hdk/entry/fn.update_entry.html),
+    [`get_details`](https://docs.rs/hdk/0.0.*/hdk/entry/fn.get_details.html),
+    [`delete_entry`](https://docs.rs/hdk/0.0.*/hdk/entry/fn.delete_entry.html),
+    [`create_link`](https://docs.rs/hdk/0.0.*/hdk/link/fn.create_link.html),
+    [`get_links`](https://docs.rs/hdk/0.0.*/hdk/link/fn.get_links.html)
   - see [docs.rs/hdk](https://docs.rs/hdk)
 
 
@@ -100,8 +104,8 @@ hash and new entry content*
 ![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1fXfZsHd0B6BO-y9D4TyHd-linPry7hKE&sz=w1000)
 
 Again, we can only follow the relationship between the Create's Note entry and the Update's Note
-entry via the Agent's source chain.  To list the most recent updates of an Agent's notes, the
-process would be...
+entry via the Agent's source chain.  To list the most up-to-date notes for an Agent process would
+be...
 
 1. [`get_links`](https://docs.rs/hdk/0.0.*/hdk/link/fn.get_links.html) from the Agent entry base to
    get a list of created Note entries.
@@ -114,7 +118,8 @@ process would be...
 
 Now we have made a few assumptions here already.
 
-- We are assuming that each Note entry is a full-state update of the Note contents.
+- We are assuming that each update to our Note entry contains data for all of its fields
+  (full-state)
    - We could design our Note entry so that only changed fields are included in the Update's Note
      entry (which we could call operation-based updating).  This pattern choice relates to
      [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) and we will call it
