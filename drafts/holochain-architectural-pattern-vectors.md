@@ -16,7 +16,7 @@ Vectors](https://github.com/mjbrisebois/hc-4-pattern-vectors).
 
 Holochain is a very flexible framework.  With its latitudinarian architecture can come the issue of
 overchoice (or the paradox of choice).  A new developer may find the number of options overwhelming
-and not know where to start planning their app.  The article is an introduction to my journey of
+and not know where to start planning their app.  This article is an introduction to my journey of
 developing apps for Holochain and the new paradigms that it revealed.  Hopefully, after reading this
 the 4 pattern vectors will narrow the field of options to a comprehendible path.
 
